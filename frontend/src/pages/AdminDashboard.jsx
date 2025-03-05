@@ -7,32 +7,12 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteSuccess, setDeleteSuccess] = useState('');
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0
-  });
   
   useEffect(() => {
     const fetchApplications = async () => {
       try {
         const response = await axios.get('/api/get-all-applications');
         setApplications(response.data);
-        
-        // Calculate stats
-        const total = response.data.length;
-        const pending = response.data.filter(app => app.status === 'pending').length;
-        const approved = response.data.filter(app => app.status === 'approved').length;
-        const rejected = response.data.filter(app => app.status === 'rejected').length;
-        
-        setStats({
-          total,
-          pending: pending || Math.floor(total * 0.4), // Fallback if status not provided
-          approved: approved || Math.floor(total * 0.4),
-          rejected: rejected || Math.floor(total * 0.2)
-        });
-        
         setLoading(false);
       } catch (error) {
         setError('Error fetching applications: ' + (error.response?.data?.message || 'Unknown error'));
@@ -49,13 +29,6 @@ const AdminDashboard = () => {
         await axios.delete(`/api/delete-application/${id}`);
         setApplications(applications.filter(app => app.id !== id));
         setDeleteSuccess('Application deleted successfully');
-        
-        // Update stats
-        setStats(prev => ({
-          ...prev,
-          total: prev.total - 1
-        }));
-        
         setTimeout(() => setDeleteSuccess(''), 3000);
       } catch (error) {
         setError('Error deleting application: ' + (error.response?.data?.message || 'Unknown error'));
@@ -91,9 +64,9 @@ const AdminDashboard = () => {
           <Link to="/admin/manage-users" className="btn btn-outline-primary me-2" style={{ borderRadius: '8px' }}>
             <i className="bi bi-people me-2"></i>Manage Users
           </Link>
-          <Link to="/admin/settings" className="btn btn-outline-secondary" style={{ borderRadius: '8px' }}>
+          {/* <Link to="/admin/settings" className="btn btn-outline-secondary" style={{ borderRadius: '8px' }}>
             <i className="bi bi-gear me-2"></i>Settings
-          </Link>
+          </Link> */}
         </div>
       </div>
       
@@ -119,64 +92,20 @@ const AdminDashboard = () => {
         </div>
       )}
       
-      {/* Stats Overview */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-6 col-lg-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}>
+      {/* Total Applications Card */}
+      <div className="row mb-4">
+        <div className="col-md-6 col-xl-4">
+          <div className="card border-0 shadow-sm" style={{ borderRadius: '12px' }}>
             <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-2">
-                <div className="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
-                  <i className="bi bi-file-earmark-text text-primary"></i>
+              <div className="d-flex align-items-center">
+                <div className="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                  <i className="bi bi-file-earmark-text text-primary fs-4"></i>
                 </div>
-                <h5 className="card-title mb-0">Total Applications</h5>
-              </div>
-              <h2 className="display-6 fw-bold text-primary mb-0">{stats.total}</h2>
-              <div className="text-muted small mt-2">All submitted applications</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-6 col-lg-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-2">
-                <div className="rounded-circle bg-warning bg-opacity-10 p-2 me-3">
-                  <i className="bi bi-hourglass-split text-warning"></i>
+                <div>
+                  <h5 className="card-title mb-1">Total Applications</h5>
+                  <h2 className="fw-bold text-primary mb-0">{applications.length}</h2>
                 </div>
-                <h5 className="card-title mb-0">Pending Review</h5>
               </div>
-              <h2 className="display-6 fw-bold text-warning mb-0">{stats.pending}</h2>
-              <div className="text-muted small mt-2">Applications awaiting review</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-6 col-lg-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-2">
-                <div className="rounded-circle bg-success bg-opacity-10 p-2 me-3">
-                  <i className="bi bi-check-circle text-success"></i>
-                </div>
-                <h5 className="card-title mb-0">Approved</h5>
-              </div>
-              <h2 className="display-6 fw-bold text-success mb-0">{stats.approved}</h2>
-              <div className="text-muted small mt-2">Approved applications</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-6 col-lg-3">
-          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}>
-            <div className="card-body p-4">
-              <div className="d-flex align-items-center mb-2">
-                <div className="rounded-circle bg-danger bg-opacity-10 p-2 me-3">
-                  <i className="bi bi-x-circle text-danger"></i>
-                </div>
-                <h5 className="card-title mb-0">Rejected</h5>
-              </div>
-              <h2 className="display-6 fw-bold text-danger mb-0">{stats.rejected}</h2>
-              <div className="text-muted small mt-2">Rejected applications</div>
             </div>
           </div>
         </div>
@@ -259,7 +188,8 @@ const AdminDashboard = () => {
                               color: '#0d6efd',
                               borderRadius: '6px' 
                             }}
-                          >
+                            title="View Application"
+                          >View
                             <i className="bi bi-eye"></i>
                           </Link>
                           <Link 
@@ -270,7 +200,8 @@ const AdminDashboard = () => {
                               color: '#ffc107',
                               borderRadius: '6px' 
                             }}
-                          >
+                            title="Edit Application"
+                          >Edit
                             <i className="bi bi-pencil"></i>
                           </Link>
                           <button 
@@ -281,7 +212,8 @@ const AdminDashboard = () => {
                               borderRadius: '6px' 
                             }}
                             onClick={() => handleDelete(application.id)}
-                          >
+                            title="Delete Application"
+                          >Delete
                             <i className="bi bi-trash"></i>
                           </button>
                         </div>

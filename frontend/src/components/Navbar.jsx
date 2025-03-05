@@ -159,14 +159,14 @@ const Navbar = () => {
                         <i className="bi bi-people me-1"></i> Manage Users
                       </Link>
                     </li>
-                    <li className="nav-item mx-1">
+                    {/* <li className="nav-item mx-1">
                       <Link 
                         className={`nav-link text-white px-3 ${isActive('/admin/settings') && 'active'}`} 
                         to="/admin/settings"
                       >
                         <i className="bi bi-gear me-1"></i> Settings
                       </Link>
-                    </li>
+                    </li> */}
                   </>
                 )}
               </ul>

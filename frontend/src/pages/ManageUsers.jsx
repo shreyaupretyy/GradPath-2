@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { Link } from 'react-router-dom';
+import axios from '../services/axiosConfig';
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -16,9 +16,6 @@ const ManageUsers = () => {
   const [tempPassword, setTempPassword] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
   const [resetUserId, setResetUserId] = useState(null);
-  const [currentDateTime] = useState('2025-03-05 19:06:04');
-  const [currentUser] = useState('shreyaupretyy');
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -31,7 +28,7 @@ const ManageUsers = () => {
         setLoading(false);
       }
     };
-    
+
     fetchUsers();
   }, []);
 
@@ -53,16 +50,19 @@ const ManageUsers = () => {
       const response = await axios.post('/api/admin/create-student', newUser);
       setSuccess('Student created successfully');
       setTempPassword(response.data.temp_password);
-      setUsers([...users, {
-        id: response.data.user_id,
-        email: newUser.email,
-        created_at: currentDateTime,
-        has_application: true,
-        application_id: response.data.application_id,
-        first_name: newUser.first_name,
-        last_name: newUser.last_name
-      }]);
-      
+      setUsers([
+        ...users,
+        {
+          id: response.data.user_id,
+          email: newUser.email,
+          created_at: new Date().toISOString(),
+          has_application: true,
+          application_id: response.data.application_id,
+          first_name: newUser.first_name,
+          last_name: newUser.last_name
+        }
+      ]);
+
       // Reset form
       setNewUser({
         email: '',
@@ -78,7 +78,7 @@ const ManageUsers = () => {
   const handleResetPassword = async (userId) => {
     setResetSuccess('');
     setResetUserId(null);
-    
+
     try {
       const response = await axios.post(`/api/admin/reset-password/${userId}`);
       setResetUserId(userId);
@@ -89,162 +89,313 @@ const ManageUsers = () => {
   };
 
   if (loading) {
-    return <div className="text-center mt-5">Loading...</div>;
+    return (
+      <div className="min-vh-100 d-flex justify-content-center align-items-center" style={{
+        background: 'linear-gradient(to right, #f8f9fa, #ffffff)'
+      }}>
+        <div className="text-center">
+          <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }} role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted">Loading user data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mt-4 mb-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Manage User Records</h2>
-        <Link to="/admin/dashboard" className="btn btn-secondary">
-          Back to Dashboard
-        </Link>
+    <div className="container-fluid py-4 px-4 px-md-5">
+      <div className="row mb-4">
+        <div className="col">
+          <h1 className="h3 fw-light mb-0" style={{ letterSpacing: '-0.5px' }}>
+            Manage <span className="fw-bold">Users</span>
+          </h1>
+          <p className="text-muted">Add and manage student records in the system</p>
+        </div>
+        <div className="col-auto">
+          <Link to="/admin/dashboard" className="btn btn-outline-primary" style={{ borderRadius: '8px' }}>
+            <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
+          </Link>
+        </div>
       </div>
-      
-      
-      
-      <div className="row">
-        <div className="col-md-5 mb-4">
-          <div className="card">
-            <div className="card-header bg-success text-white">
-              <h3 className="mb-0">Add New Student Record</h3>
+
+      {error && (
+        <div className="alert alert-danger py-2 px-3 mb-4" style={{
+          borderRadius: '8px',
+          fontSize: '0.9rem',
+          border: 'none',
+          backgroundColor: 'rgba(220, 53, 69, 0.1)'
+        }}>
+          <i className="bi bi-exclamation-circle me-2"></i>{error}
+        </div>
+      )}
+
+      <div className="row g-4">
+        <div className="col-lg-5">
+          {/* Add New Student Card */}
+          <div className="card border-0 shadow-sm h-100" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="card-header border-0 py-3" style={{
+              background: 'linear-gradient(135deg, #20c997, #0dcaf0)',
+              color: 'white'
+            }}>
+              <div className="d-flex align-items-center">
+                <i className="bi bi-person-plus fs-4 me-2"></i>
+                <h3 className="h5 mb-0">Add New Student</h3>
+              </div>
             </div>
-            <div className="card-body">
-              {error && <div className="alert alert-danger">{error}</div>}
+
+            <div className="card-body p-4">
               {success && (
-                <div className="alert alert-success">
-                  {success}
-                  {tempPassword && (
-                    <div className="mt-2">
-                      <strong>Temporary Password:</strong> {tempPassword}
-                      <div className="small text-muted">
-                        Please note this password as it will not be shown again.
-                      </div>
+                <div className="alert py-2 px-3 mb-4" style={{
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  border: 'none',
+                  backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                  color: '#198754'
+                }}>
+                  <div className="d-flex align-items-center">
+                    <i className="bi bi-check-circle me-2"></i>
+                    <div>
+                      <div>{success}</div>
+                      {tempPassword && (
+                        <div className="mt-2 bg-white p-2 rounded">
+                          <span className="fw-medium">Temporary Password:</span>
+                          <span className="user-select-all ms-2 badge bg-dark text-light px-2 py-1" style={{ fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                            {tempPassword}
+                          </span>
+                          <div className="small mt-1">Please note this password as it will not be shown again.</div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
-              
+
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email <span className="text-danger">*</span></label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    name="email"
-                    value={newUser.email}
-                    onChange={handleChange}
-                    required
-                  />
+                  <label htmlFor="email" className="form-label small text-muted">
+                    Email Address <span className="text-danger">*</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-white text-muted border-end-0">
+                      <i className="bi bi-envelope"></i>
+                    </span>
+                    <input
+                      type="email"
+                      className="form-control border-start-0 ps-0"
+                      id="email"
+                      name="email"
+                      placeholder="student@example.com"
+                      value={newUser.email}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        borderRadius: '8px',
+                        padding: '0.6rem 1rem',
+                        borderTopLeftRadius: '0',
+                        borderBottomLeftRadius: '0'
+                      }}
+                    />
+                  </div>
                 </div>
-                
+
                 <div className="mb-3">
-                  <label htmlFor="first_name" className="form-label">First Name <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="first_name"
-                    name="first_name"
-                    value={newUser.first_name}
-                    onChange={handleChange}
-                    required
-                  />
+                  <label htmlFor="first_name" className="form-label small text-muted">
+                    First Name <span className="text-danger">*</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-white text-muted border-end-0">
+                      <i className="bi bi-person"></i>
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control border-start-0 ps-0"
+                      id="first_name"
+                      name="first_name"
+                      placeholder="Enter first name"
+                      value={newUser.first_name}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        borderRadius: '8px',
+                        padding: '0.6rem 1rem',
+                        borderTopLeftRadius: '0',
+                        borderBottomLeftRadius: '0'
+                      }}
+                    />
+                  </div>
                 </div>
-                
+
                 <div className="mb-3">
-                  <label htmlFor="last_name" className="form-label">Last Name <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="last_name"
-                    name="last_name"
-                    value={newUser.last_name}
-                    onChange={handleChange}
-                    required
-                  />
+                  <label htmlFor="last_name" className="form-label small text-muted">
+                    Last Name <span className="text-danger">*</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-white text-muted border-end-0">
+                      <i className="bi bi-person-fill"></i>
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control border-start-0 ps-0"
+                      id="last_name"
+                      name="last_name"
+                      placeholder="Enter last name"
+                      value={newUser.last_name}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        borderRadius: '8px',
+                        padding: '0.6rem 1rem',
+                        borderTopLeftRadius: '0',
+                        borderBottomLeftRadius: '0'
+                      }}
+                    />
+                  </div>
                 </div>
-                
-                <div className="mb-3">
-                  <label htmlFor="contact_number" className="form-label">Contact Number <span className="text-danger">*</span></label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    id="contact_number"
-                    name="contact_number"
-                    value={newUser.contact_number}
-                    onChange={handleChange}
-                    required
-                  />
+
+                <div className="mb-4">
+                  <label htmlFor="contact_number" className="form-label small text-muted">
+                    Contact Number <span className="text-danger">*</span>
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text bg-white text-muted border-end-0">
+                      <i className="bi bi-phone"></i>
+                    </span>
+                    <input
+                      type="tel"
+                      className="form-control border-start-0 ps-0"
+                      id="contact_number"
+                      name="contact_number"
+                      placeholder="Enter contact number"
+                      value={newUser.contact_number}
+                      onChange={handleChange}
+                      required
+                      style={{
+                        borderRadius: '8px',
+                        padding: '0.6rem 1rem',
+                        borderTopLeftRadius: '0',
+                        borderBottomLeftRadius: '0'
+                      }}
+                    />
+                  </div>
                 </div>
-                
+
                 <div className="d-grid gap-2">
-                  <button type="submit" className="btn btn-success">
-                    <i className="bi bi-person-plus-fill"></i> Add Student
+                  <button
+                    type="submit"
+                    className="btn py-2"
+                    style={{
+                      background: 'linear-gradient(135deg, #20c997, #0dcaf0)',
+                      color: 'white',
+                      borderRadius: '8px',
+                      boxShadow: '0 3px 6px rgba(32, 201, 151, 0.2)'
+                    }}
+                  >
+                    <i className="bi bi-person-plus me-2"></i>Add Student
                   </button>
-                  <button type="reset" className="btn btn-outline-secondary">
-                    Reset Form
+                  <button
+                    type="reset"
+                    className="btn btn-light"
+                    style={{
+                      borderRadius: '8px',
+                      border: '1px solid #dee2e6'
+                    }}
+                  >
+                    <i className="bi bi-x-lg me-2"></i>Reset Form
                   </button>
                 </div>
               </form>
             </div>
           </div>
         </div>
-        
-        <div className="col-md-7">
-          <div className="card">
-            <div className="card-header bg-primary text-white">
-              <h3 className="mb-0">Student List</h3>
+
+        <div className="col-lg-7">
+          {/* Student List Card */}
+          <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="card-header border-0 py-3" style={{
+              background: 'linear-gradient(135deg, #0d6efd, #0dcaf0)',
+              color: 'white'
+            }}>
+              <div className="d-flex align-items-center">
+                <i className="bi bi-people fs-4 me-2"></i>
+                <h3 className="h5 mb-0">Student List</h3>
+              </div>
             </div>
-            <div className="card-body">
+
+            <div className="card-body p-0">
               {resetSuccess && (
-                <div className="alert alert-success">
-                  {resetSuccess}
-                  <div className="small text-muted">
-                    Please note this password as it will not be shown again.
+                <div className="alert m-3 py-2 px-3" style={{
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  border: 'none',
+                  backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                  color: '#198754'
+                }}>
+                  <div className="d-flex">
+                    <i className="bi bi-check-circle me-2"></i>
+                    <div>
+                      <div>{resetSuccess}</div>
+                      <div className="small mt-1">Please note this password as it will not be shown again.</div>
+                    </div>
                   </div>
                 </div>
               )}
-              
+
               {users.length === 0 ? (
-                <div className="text-center p-5">
-                  <div className="alert alert-info mb-4">No students found.</div>
-                  <p className="lead">Add your first student using the form on the left.</p>
+                <div className="text-center py-5">
+                  <i className="bi bi-people text-muted fs-1"></i>
+                  <p className="mt-3 text-muted">No students found.</p>
+                  <p className="text-muted">Add your first student using the form on the left.</p>
                 </div>
               ) : (
                 <div className="table-responsive">
-                  <table className="table table-striped table-hover">
-                    <thead className="table-dark">
+                  <table className="table table-hover align-middle mb-0" style={{ fontSize: '0.95rem' }}>
+                    <thead className="table-light">
                       <tr>
-                        <th>Email</th>
+                        <th className="ps-4">Email</th>
                         <th>Name</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
+                        <th>Created</th>
+                        <th className="text-end pe-4">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.map(user => (
                         <tr key={user.id}>
-                          <td>{user.email}</td>
-                          <td>{`${user.first_name || ''} ${user.last_name || ''}`}</td>
-                          <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                          <td className="ps-4">
+                            <span className="text-primary">{user.email}</span>
+                          </td>
                           <td>
-                            {user.has_application ? (
-                              <Link 
-                                to={`/admin/application/${user.application_id}`}
-                                className="btn btn-sm btn-info me-2"
+                            {`${user.first_name || ''} ${user.last_name || ''}`}
+                          </td>
+                          <td>
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="text-end pe-4">
+                            <div className="d-flex justify-content-end gap-2">
+                              {user.has_application ? (
+                                <Link
+                                  to={`/admin/application/${user.application_id}`}
+                                  className="btn btn-sm px-3 py-1"
+                                  style={{
+                                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                                    color: '#0d6efd',
+                                    borderRadius: '6px'
+                                  }}
+                                  title="View student's application"
+                                >
+                                  <i className="bi bi-file-earmark-text me-1"></i>
+                                  <span className="d-none d-md-inline">View Application</span>
+                                </Link>
+                              ) : (
+                                <span className="badge bg-warning text-dark me-2">No Application</span>
+                              )}
+                              <button
+                                className="btn btn-sm btn-warning"
+                                onClick={() => handleResetPassword(user.id)}
                               >
-                                View Application
-                              </Link>
-                            ) : (
-                              <span className="badge bg-warning text-dark me-2">No Application</span>
-                            )}
-                            <button 
-                              className="btn btn-sm btn-warning"
-                              onClick={() => handleResetPassword(user.id)}
-                            >
-                              Reset Password
-                            </button>
+                                Reset Password
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -254,35 +405,8 @@ const ManageUsers = () => {
               )}
             </div>
           </div>
+
           
-          <div className="card mt-4">
-            <div className="card-header bg-info text-white">
-              <h3 className="mb-0">Quick Actions</h3>
-            </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <div className="d-grid">
-                    <Link to="/admin/dashboard" className="btn btn-outline-primary">
-                      <i className="bi bi-speedometer2"></i> Dashboard
-                    </Link>
-                  </div>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <div className="d-grid">
-                    <Link to="/admin/settings" className="btn btn-outline-secondary">
-                      <i className="bi bi-gear-fill"></i> Settings
-                    </Link>
-                  </div>
-                </div>
-              </div>
-              <div className="d-grid">
-                <button className="btn btn-outline-success" onClick={() => window.print()}>
-                  <i className="bi bi-printer-fill"></i> Print Student List
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
